@@ -18,7 +18,7 @@ def get_abuseipdb_info(ip_address):
     Sendet eine IP-Adresse an die AbuseIPDB-API (abuseipdb.com), um Informationen über die Vertrauenswürdigkeit der IP-Adresse zu erhalten.
 
     Args:
-        ip_address (str): Die zu überprüfende IPv4- odder IPv6-Adresse..
+        ip_address (str): Die zu überprüfende IPv4- odder IPv6-Adresse.
 
     Returns:
         dict: Ein Dictionary, das entweder die erfolgreichen Analysedaten der API erhält (z.B. 'abuseConfidenceScore')
