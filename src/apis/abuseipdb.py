@@ -7,11 +7,11 @@ Es wird ein API-Schlüssel benötigt, der in der .env-Datei als "AbuseIPDB_KEY" 
 
 import requests # Nötig, um HTTP-Anfragen an die API zu senden
 import os # Nötig, um die Umgebungsvariablen zu laden
+import streamlit as st # Nötig für die Cloud-Secrets
 from dotenv import load_dotenv # Funktion zum Laden der Umgebungsvariablen aus der .env-Datei
 
 load_dotenv() # Lädt die .env-Datei
-api_key = os.getenv("AbuseIPDB_KEY") # Holt den API-Schlüssel aus den Umgebungsvariablen
-
+api_key = st.secrets.get("AbuseIPDB_KEY", os.getenv("AbuseIPDB_KEY")) # Sucht erst in den Cloud-Secrets nach dem API-Key. Fall leer oder nicht da, greift der lokale Key aus der .env
 def get_abuseipdb_info(ip_address):
 
     """
