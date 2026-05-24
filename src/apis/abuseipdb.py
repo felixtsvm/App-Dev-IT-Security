@@ -11,7 +11,14 @@ import streamlit as st # Nötig für die Cloud-Secrets
 from dotenv import load_dotenv # Funktion zum Laden der Umgebungsvariablen aus der .env-Datei
 
 load_dotenv() # Lädt die .env-Datei
-api_key = st.secrets.get("AbuseIPDB_KEY", os.getenv("AbuseIPDB_KEY")) # Sucht erst in den Cloud-Secrets nach dem API-Key. Fall leer oder nicht da, greift der lokale Key aus der .env
+
+try:
+    # Versucht die Cloud-Secrets zu lesen (funktioniert auf dem Server)
+    api_key = st.secrets["AbuseIPDB_KEY"]
+except Exception:
+    # Falls lokal die Datei fehlt, greift die .env
+    api_key = os.getenv("AbuseIPDB_KEY")
+
 def get_abuseipdb_info(ip_address):
 
     """
