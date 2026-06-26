@@ -2,14 +2,15 @@
 Zentraler API-Koordinator.
 
 Dieses Modul koordiniert die Abfragen an allen externen APIs.
-Es ruft die einzelnen API-Funktionen nacheinander auf, fängt Fehler ab
-und bündelt die Ergebnisse zu einem standardisierten Gesamtpaket
-für das Streamlit-Frontend.
+Es ruft die einzelnen API-Funktionen nacheinander auf, fängt Fehler ab,
+bündelt die Ergebnisse und nutzt einen Cache, damit identische IP-Adressen
+nicht unnötig mehrfach abgefragt werden.
 """
 
 from apis.abuseipdb import get_abuseipdb_info
 from apis.ipapi import get_ipapi_info
 from apis.ipsum import get_ipsum_info
+from cache import get_cached_result, set_cached_result
 
 
 def run_complete_scan(ip_address):
@@ -24,6 +25,12 @@ def run_complete_scan(ip_address):
     """
 
     try:
+        cached_result = get_cached_result(ip_address)
+
+        if cached_result is not None:
+            cached_result["cache_hit"] = True
+            return cached_result
+
         abuseipdb_data = get_abuseipdb_info(ip_address)
 
         if "error" in abuseipdb_data:
@@ -48,8 +55,9 @@ def run_complete_scan(ip_address):
                 "error": f"IPsum-Fehler: {ipsum_data['error']}"
             }
 
-        return {
+        result = {
             "success": True,
+            "cache_hit": False,
 
             "threat_data": {
                 "score": abuseipdb_data.get("abuseConfidenceScore", 0),
@@ -69,6 +77,10 @@ def run_complete_scan(ip_address):
                 "status": ipsum_data.get("status_text", "Keine Daten")
             }
         }
+
+        set_cached_result(ip_address, result)
+
+        return result
 
     except Exception as e:
         return {

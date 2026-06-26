@@ -1,7 +1,7 @@
 """
 IP-Checker Web-Applikation
 
-Dieses Modul stellt die Benutzeroberfläche (UI) der Web-Applikation mittels Streamlit bereit.
+Dieses Modul stellt die Benutzeroberfläche der Web-Applikation mittels Streamlit bereit.
 Es dient als Haupteinstiegspunkt der Anwendung, nimmt Benutzereingaben entgegen und koordiniert
 die Interaktion mit dem Validator, dem API-Koordinator und dem Scoring-Modul.
 """
@@ -39,6 +39,11 @@ if st.button("Prüfen"):
 
             else:
                 st.success(f"Analyse für {ip_input} abgeschlossen!")
+
+                if result.get("cache_hit"):
+                    st.info("Ergebnis wurde aus dem Cache geladen.")
+                else:
+                    st.info("Ergebnis wurde neu über die APIs abgefragt.")
 
                 threat = result["threat_data"]
                 geo = result["geo_data"]
