@@ -2,123 +2,110 @@
 IP-Checker Web-Applikation
 
 Dieses Modul stellt die Benutzeroberfläche (UI) der Web-Applikation mittels Streamlit bereit.
-Es dient als Haupteinstiegspunkt der Anwendung, nimmt Benutzereingaben entgegen und koordiniert 
-die Interaktion mit dem Validator (Logik) und dem API-Koordinator.
+Es dient als Haupteinstiegspunkt der Anwendung, nimmt Benutzereingaben entgegen und koordiniert
+die Interaktion mit dem Validator, dem API-Koordinator und dem Scoring-Modul.
 """
 
-# ====================================================================
-# 1. Importe
-# ====================================================================
-import streamlit as st  # Streamlit-Bibliothek importieren (Framework für die UI)
-from coordinator import run_complete_scan  # Koordiniert die einzelnen API-Abfragen
-from validator import ip_testung  # Methode, welche die formale Richtigkeit der IP-Adresse validiert
+import streamlit as st
 
-# ====================================================================
-# 2. Metadaten für den Browser-Tab
-# ====================================================================
+from coordinator import run_complete_scan
+from validator import ip_testung
+from scoring import calculate_final_score, calculate_risk_level
+
+
 st.set_page_config(
-    page_title='IP-Checker',  # Text, der oben im Browser-Tab angezeigt wird
-    page_icon='🛡️'  # Icon neben dem Tab-Titel
+    page_title="IP-Checker",
+    page_icon="🛡️"
 )
 
-# ====================================================================
-# 3. Grafische Oberfläche (UI-Layout & Texte)
-# ====================================================================
+st.title("IP-Checker")
+st.markdown("Prüfe verdächtige IP-Adressen auf ihre Vertrauenswürdigkeit!")
 
-# Hauptüberschrift der Seite
-st.title('IP-Checker')
-
-# Unterüberschrift
-st.markdown('Prüfe verdächtige IP-Adressen auf ihre Vertrauenswürdigkeit!')
-
-# ====================================================================
-# 4. Benutzereingabe
-# ====================================================================
-
-# Eingabefeld für die IP-Adresse, die der Benutzer überprüfen möchte
 ip_input = st.text_input(
-    'Gewünschte IP-Adresse zur Prüfung:',
-    placeholder='z. B. 92.208.35.210'
+    "Gewünschte IP-Adresse zur Prüfung:",
+    placeholder="z. B. 92.208.35.210"
 )
 
-# ====================================================================
-# 5. Hauptlogik
-# ====================================================================
+if st.button("Prüfen"):
 
-# Wird wahr, wenn der Benutzer auf den unten erstellten 'Prüfen'-Button klickt
-if st.button('Prüfen'):
-
-    # Stufe 1: Formale Validierung über das importierte Validator-Modul
     if ip_testung(ip_input):
 
-        # Visuelles Lade-Feedback, während die API-Anfragen im Hintergrund laufen
-        with st.spinner(f'Prüfe {ip_input}... in der Datenbank'):
+        with st.spinner(f"Prüfe {ip_input}... in der Datenbank"):
 
-            # Es wird der Koordinator aufgerufen. Dieser erledigt alle 3 API-Abfragen
             result = run_complete_scan(ip_input)
 
-            # Stufe 2: Fehlerbehandlung, falls der Koordinator einen Fehler zurückgibt (success == False)
-            if not result['success']:
-                st.error(result['error'])
+            if not result["success"]:
+                st.error(result["error"])
 
             else:
-                # Erfolgsmeldung bei erfolgreicher Analyse
-                st.success(f'Analyse für {ip_input} abgeschlossen!')
+                st.success(f"Analyse für {ip_input} abgeschlossen!")
 
-                # ==============================================================================================
-                # 5.1 Datenvisualisierung
-                # ==============================================================================================
-                # Anzeige der ausgewählten und sortierten Metriken aus unserem Koordinator-Paket
-                # Hinweis: Die technische Datenanalyse ist an dieser Stelle vollständig abgeschlossen.
-                # Die folgenden Zeilen dienen rein der grafischen Aufbereitung der Ergebnisse für den Benutzer.
-                # ----------------------------------------------------------------------------------------------
-                
-                # --------------------------------------------------------------------
-                # Bereich A: IP-Sicherheitsdaten (AbuseIPDB)
-                # --------------------------------------------------------------------
-                st.subheader('🛡️ IT-Sicherheitsreputation')
-                threat = result['threat_data']  # Sicherheits-Paket aus dem Gesamtpaket
-                
-                # Es werden 2 nebeneinanderliegende Spalten für die wichtigsten Kennzahlen erstellt
-                col_t1, col_t2 = st.columns(2)
+                threat = result["threat_data"]
+                geo = result["geo_data"]
+                blacklist = result["blacklist_data"]
 
-                col_t1.metric('Abuse Score', f"{threat['score']}%")  # Abuse-Score in Prozent
-                col_t2.metric('Whitelist-Status', 'Ja' if threat['whitelisted'] else 'Nein')  # 'Ja' oder 'Nein'
+                final_score = calculate_final_score(
+                    abuse_score=threat["score"],
+                    is_blacklisted=blacklist["listed"],
+                    is_whitelisted=threat["whitelisted"]
+                )
 
-                st.divider()  # Trennlinie für eine saubere Optik
+                risk = calculate_risk_level(final_score)
 
-                # --------------------------------------------------------------------
-                # Bereich B: Geografische Informationen (IP-API)
-                # --------------------------------------------------------------------
-                st.subheader('📍 Geografische Lokalisierung')
-                geo = result['geo_data']  # Standort-Unterpaket aus dem Gesamtpaket
-                
-                # Es wird ein dreispaltiges Layout für Land, Stadt und Region erstellt.
+                st.subheader("🚦 Risiko-Bewertung")
+
+                st.markdown(
+                    f"""
+                    <div style="
+                        padding: 18px;
+                        border-radius: 10px;
+                        border: 2px solid {risk["color"]};
+                        background-color: rgba(128, 128, 128, 0.08);
+                    ">
+                        <h3>{risk["icon"]} {risk["level"]}</h3>
+                        <p>{risk["explanation"]}</p>
+                        <p><b>Final Risk Score:</b> {final_score}/100</p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+                st.divider()
+
+                st.subheader("🛡️ IT-Sicherheitsreputation")
+
+                col_t1, col_t2, col_t3 = st.columns(3)
+
+                col_t1.metric("Abuse Score", f"{threat['score']}%")
+                col_t2.metric("Final Risk Score", f"{final_score}/100")
+                col_t3.metric("Risk Level", risk["level"])
+
+                st.write(
+                    f"**Whitelist-Status:** {'Ja' if threat['whitelisted'] else 'Nein'}"
+                )
+
+                st.divider()
+
+                st.subheader("📍 Geografische Lokalisierung")
+
                 col_g1, col_g2, col_g3 = st.columns(3)
 
-                col_g1.metric('Land (Code)', geo['country_code'])  # Anzeige des Ländercodes
-                col_g2.metric('Stadt', geo['city'])  # Anzeige des Stadtnamens
-                col_g3.metric('Region', geo['region'])  # Anzeige des Bundeslands
-                
-                # Anzeige von ISP und Zeitzone darunter
+                col_g1.metric("Land (Code)", geo["country_code"])
+                col_g2.metric("Stadt", geo["city"])
+                col_g3.metric("Region", geo["region"])
+
                 st.write(f"**Internet-Provider (ISP):** {geo['isp']}")
                 st.write(f"**Zeitzone:** {geo['timezone']}")
 
-                st.divider()  # Erneute Trennlinie vor dem letzten Block
+                st.divider()
 
-                # --------------------------------------------------------------------
-                # Bereich C: Globale Blacklists (IPsum via GitHub)
-                # --------------------------------------------------------------------
-                st.subheader('📋 Globaler Blacklist-Abgleich')
-                blacklist = result['blacklist_data']  # Blacklist-Unterpaket aus dem Gesamtpaket
-                
-                # Es werden 2 Spalten für die Auswertung des GitHub-Feeds erstellt
+                st.subheader("📋 Globaler Blacklist-Abgleich")
+
                 col_b1, col_b2 = st.columns(2)
 
-                status_icon = '🔴 JA' if blacklist['listed'] else '🟢 NEIN'  # Farbiger Status-Punkt
-                col_b1.write(f'**Auf Verbotsliste gefunden:** {status_icon}')  # Anzeige der Listung
-                col_b2.write(f"**Detail-Status:** {blacklist['status']}")  # Anzahl der Blacklists
+                status_icon = "🔴 JA" if blacklist["listed"] else "🟢 NEIN"
+                col_b1.write(f"**Auf Verbotsliste gefunden:** {status_icon}")
+                col_b2.write(f"**Detail-Status:** {blacklist['status']}")
 
     else:
-        # Fehlermeldung, wenn der Validator feststellt, dass die IP-Adresse ungültig ist
-        st.error('Die IP-Adresse ist ungültig!')
+        st.error("Die IP-Adresse ist ungültig!")
