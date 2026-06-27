@@ -1,7 +1,7 @@
 """
 IP-Checker Web-Applikation
 
-Dieses Modul stellt die Benutzeroberfläche der Web-Applikation mittels Streamlit bereit.
+Dieses Modul stellt die Benutzeroberfläche (UI) der Web-Applikation mittels Streamlit bereit.
 Es dient als Haupteinstiegspunkt der Anwendung, nimmt Benutzereingaben entgegen und koordiniert
 die Interaktion mit dem Validator, dem API-Koordinator und dem Scoring-Modul.
 """
@@ -38,12 +38,13 @@ if st.button("Prüfen"):
                 st.error(result["error"])
 
             else:
+
                 st.success(f"Analyse für {ip_input} abgeschlossen!")
 
                 if result.get("cache_hit"):
-                    st.info("Ergebnis wurde aus dem Cache geladen.")
+                    st.info("⚡ Ergebnis wurde aus dem Cache geladen.")
                 else:
-                    st.info("Ergebnis wurde neu über die APIs abgefragt.")
+                    st.info("🌐 Ergebnis wurde neu über die APIs abgefragt.")
 
                 threat = result["threat_data"]
                 geo = result["geo_data"]
@@ -57,60 +58,82 @@ if st.button("Prüfen"):
 
                 risk = calculate_risk_level(final_score)
 
+                # =====================================================
+                # Risiko
+                # =====================================================
+
                 st.subheader("🚦 Risiko-Bewertung")
 
                 st.markdown(
                     f"""
                     <div style="
-                        padding: 18px;
-                        border-radius: 10px;
-                        border: 2px solid {risk["color"]};
-                        background-color: rgba(128, 128, 128, 0.08);
+                        padding:18px;
+                        border-radius:10px;
+                        border:2px solid {risk['color']};
+                        background-color:rgba(128,128,128,0.08);
                     ">
-                        <h3>{risk["icon"]} {risk["level"]}</h3>
-                        <p>{risk["explanation"]}</p>
-                        <p><b>Final Risk Score:</b> {final_score}/100</p>
+                    <h3>{risk['icon']} {risk['level']}</h3>
+                    <p>{risk['explanation']}</p>
+                    <h2>Final Risk Score: {final_score}/100</h2>
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
 
+                st.progress(final_score / 100)
+
                 st.divider()
+
+                # =====================================================
+                # AbuseIPDB
+                # =====================================================
 
                 st.subheader("🛡️ IT-Sicherheitsreputation")
 
-                col_t1, col_t2, col_t3 = st.columns(3)
+                col1, col2, col3 = st.columns(3)
 
-                col_t1.metric("Abuse Score", f"{threat['score']}%")
-                col_t2.metric("Final Risk Score", f"{final_score}/100")
-                col_t3.metric("Risk Level", risk["level"])
+                col1.metric("Abuse Score", f"{threat['score']}%")
+                col2.metric("Final Risk Score", f"{final_score}/100")
+                col3.metric("Risk Level", risk["level"])
 
-                st.write(
-                    f"**Whitelist-Status:** {'Ja' if threat['whitelisted'] else 'Nein'}"
-                )
+                st.write(f"**Whitelist:** {'Ja' if threat['whitelisted'] else 'Nein'}")
+                st.write(f"**Usage Type:** {threat['usage_type']}")
+                st.write(f"**Domain:** {threat['domain']}")
+                st.write(f"**Hostname:** {threat['hostname']}")
+                st.write(f"**Total Reports:** {threat['reports']}")
+                st.write(f"**Tor Exit Node:** {'Ja' if threat['tor'] else 'Nein'}")
 
                 st.divider()
 
+                # =====================================================
+                # Standort
+                # =====================================================
+
                 st.subheader("📍 Geografische Lokalisierung")
 
-                col_g1, col_g2, col_g3 = st.columns(3)
+                col1, col2, col3 = st.columns(3)
 
-                col_g1.metric("Land (Code)", geo["country_code"])
-                col_g2.metric("Stadt", geo["city"])
-                col_g3.metric("Region", geo["region"])
+                col1.metric("Land", geo["country_code"])
+                col2.metric("Stadt", geo["city"])
+                col3.metric("Region", geo["region"])
 
-                st.write(f"**Internet-Provider (ISP):** {geo['isp']}")
+                st.write(f"**Internet-Provider:** {geo['isp']}")
                 st.write(f"**Zeitzone:** {geo['timezone']}")
 
                 st.divider()
 
+                # =====================================================
+                # Blacklist
+                # =====================================================
+
                 st.subheader("📋 Globaler Blacklist-Abgleich")
 
-                col_b1, col_b2 = st.columns(2)
+                col1, col2 = st.columns(2)
 
-                status_icon = "🔴 JA" if blacklist["listed"] else "🟢 NEIN"
-                col_b1.write(f"**Auf Verbotsliste gefunden:** {status_icon}")
-                col_b2.write(f"**Detail-Status:** {blacklist['status']}")
+                status = "🔴 JA" if blacklist["listed"] else "🟢 NEIN"
+
+                col1.write(f"**Blacklist:** {status}")
+                col2.write(f"**Status:** {blacklist['status']}")
 
     else:
         st.error("Die IP-Adresse ist ungültig!")
