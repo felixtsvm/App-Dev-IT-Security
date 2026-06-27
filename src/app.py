@@ -21,119 +21,200 @@ st.set_page_config(
 st.title("IP-Checker")
 st.markdown("Prüfe verdächtige IP-Adressen auf ihre Vertrauenswürdigkeit!")
 
-ip_input = st.text_input(
-    "Gewünschte IP-Adresse zur Prüfung:",
-    placeholder="z. B. 92.208.35.210"
+scan_mode = st.radio(
+    "Scan-Modus auswählen:",
+    ["Einzelprüfung", "Batch-Scan"]
 )
 
-if st.button("Prüfen"):
+# =====================================================
+# Einzelprüfung
+# =====================================================
 
-    if ip_testung(ip_input):
+if scan_mode == "Einzelprüfung":
 
-        with st.spinner(f"Prüfe {ip_input}... in der Datenbank"):
+    ip_input = st.text_input(
+        "Gewünschte IP-Adresse zur Prüfung:",
+        placeholder="z. B. 92.208.35.210"
+    )
 
-            result = run_complete_scan(ip_input)
+    if st.button("Prüfen"):
 
-            if not result["success"]:
-                st.error(result["error"])
+        if ip_testung(ip_input):
 
-            else:
+            with st.spinner(f"Prüfe {ip_input}... in der Datenbank"):
 
-                st.success(f"Analyse für {ip_input} abgeschlossen!")
+                result = run_complete_scan(ip_input)
 
-                if result.get("cache_hit"):
-                    st.info("⚡ Ergebnis wurde aus dem Cache geladen.")
+                if not result["success"]:
+                    st.error(result["error"])
+
                 else:
-                    st.info("🌐 Ergebnis wurde neu über die APIs abgefragt.")
+                    st.success(f"Analyse für {ip_input} abgeschlossen!")
 
-                threat = result["threat_data"]
-                geo = result["geo_data"]
-                blacklist = result["blacklist_data"]
+                    if result.get("cache_hit"):
+                        st.info("⚡ Ergebnis wurde aus dem Cache geladen.")
+                    else:
+                        st.info("🌐 Ergebnis wurde neu über die APIs abgefragt.")
 
-                final_score = calculate_final_score(
-                    abuse_score=threat["score"],
-                    is_blacklisted=blacklist["listed"],
-                    is_whitelisted=threat["whitelisted"]
-                )
+                    threat = result["threat_data"]
+                    geo = result["geo_data"]
+                    blacklist = result["blacklist_data"]
 
-                risk = calculate_risk_level(final_score)
+                    final_score = calculate_final_score(
+                        abuse_score=threat["score"],
+                        is_blacklisted=blacklist["listed"],
+                        is_whitelisted=threat["whitelisted"]
+                    )
 
-                # =====================================================
-                # Risiko
-                # =====================================================
+                    risk = calculate_risk_level(final_score)
 
-                st.subheader("🚦 Risiko-Bewertung")
+                    st.subheader("🚦 Risiko-Bewertung")
 
-                st.markdown(
-                    f"""
-                    <div style="
-                        padding:18px;
-                        border-radius:10px;
-                        border:2px solid {risk['color']};
-                        background-color:rgba(128,128,128,0.08);
-                    ">
-                    <h3>{risk['icon']} {risk['level']}</h3>
-                    <p>{risk['explanation']}</p>
-                    <h2>Final Risk Score: {final_score}/100</h2>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                    st.markdown(
+                        f"""
+                        <div style="
+                            padding:18px;
+                            border-radius:10px;
+                            border:2px solid {risk['color']};
+                            background-color:rgba(128,128,128,0.08);
+                        ">
+                        <h3>{risk['icon']} {risk['level']}</h3>
+                        <p>{risk['explanation']}</p>
+                        <h2>Final Risk Score: {final_score}/100</h2>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
 
-                st.progress(final_score / 100)
+                    st.progress(final_score / 100)
 
-                st.divider()
+                    st.divider()
 
-                # =====================================================
-                # AbuseIPDB
-                # =====================================================
+                    st.subheader("🛡️ IT-Sicherheitsreputation")
 
-                st.subheader("🛡️ IT-Sicherheitsreputation")
+                    col1, col2, col3 = st.columns(3)
 
-                col1, col2, col3 = st.columns(3)
+                    col1.metric("Abuse Score", f"{threat['score']}%")
+                    col2.metric("Final Risk Score", f"{final_score}/100")
+                    col3.metric("Risk Level", risk["level"])
 
-                col1.metric("Abuse Score", f"{threat['score']}%")
-                col2.metric("Final Risk Score", f"{final_score}/100")
-                col3.metric("Risk Level", risk["level"])
+                    st.write(f"**Whitelist:** {'Ja' if threat['whitelisted'] else 'Nein'}")
+                    st.write(f"**Usage Type:** {threat['usage_type']}")
+                    st.write(f"**Domain:** {threat['domain']}")
+                    st.write(f"**Hostname:** {threat['hostname']}")
+                    st.write(f"**Total Reports:** {threat['reports']}")
+                    st.write(f"**Tor Exit Node:** {'Ja' if threat['tor'] else 'Nein'}")
 
-                st.write(f"**Whitelist:** {'Ja' if threat['whitelisted'] else 'Nein'}")
-                st.write(f"**Usage Type:** {threat['usage_type']}")
-                st.write(f"**Domain:** {threat['domain']}")
-                st.write(f"**Hostname:** {threat['hostname']}")
-                st.write(f"**Total Reports:** {threat['reports']}")
-                st.write(f"**Tor Exit Node:** {'Ja' if threat['tor'] else 'Nein'}")
+                    st.divider()
 
-                st.divider()
+                    st.subheader("📍 Geografische Lokalisierung")
 
-                # =====================================================
-                # Standort
-                # =====================================================
+                    col1, col2, col3 = st.columns(3)
 
-                st.subheader("📍 Geografische Lokalisierung")
+                    col1.metric("Land", geo["country_code"])
+                    col2.metric("Stadt", geo["city"])
+                    col3.metric("Region", geo["region"])
 
-                col1, col2, col3 = st.columns(3)
+                    st.write(f"**Internet-Provider:** {geo['isp']}")
+                    st.write(f"**Zeitzone:** {geo['timezone']}")
 
-                col1.metric("Land", geo["country_code"])
-                col2.metric("Stadt", geo["city"])
-                col3.metric("Region", geo["region"])
+                    st.divider()
 
-                st.write(f"**Internet-Provider:** {geo['isp']}")
-                st.write(f"**Zeitzone:** {geo['timezone']}")
+                    st.subheader("📋 Globaler Blacklist-Abgleich")
 
-                st.divider()
+                    col1, col2 = st.columns(2)
 
-                # =====================================================
-                # Blacklist
-                # =====================================================
+                    status = "🔴 JA" if blacklist["listed"] else "🟢 NEIN"
 
-                st.subheader("📋 Globaler Blacklist-Abgleich")
+                    col1.write(f"**Blacklist:** {status}")
+                    col2.write(f"**Status:** {blacklist['status']}")
 
-                col1, col2 = st.columns(2)
+        else:
+            st.error("Die IP-Adresse ist ungültig!")
 
-                status = "🔴 JA" if blacklist["listed"] else "🟢 NEIN"
 
-                col1.write(f"**Blacklist:** {status}")
-                col2.write(f"**Status:** {blacklist['status']}")
+# =====================================================
+# Batch-Scan
+# =====================================================
 
-    else:
-        st.error("Die IP-Adresse ist ungültig!")
+if scan_mode == "Batch-Scan":
+
+    st.subheader("📦 Batch-Scan")
+
+    batch_input = st.text_area(
+        "Mehrere IP-Adressen eingeben, jeweils eine IP pro Zeile:",
+        placeholder="8.8.8.8\n1.1.1.1\n185.220.101.1",
+        height=180
+    )
+
+    if st.button("Batch prüfen"):
+
+        ip_list = [
+            ip.strip()
+            for ip in batch_input.splitlines()
+            if ip.strip()
+        ]
+
+        if not ip_list:
+            st.error("Bitte mindestens eine IP-Adresse eingeben.")
+
+        else:
+            results_table = []
+
+            with st.spinner("Batch-Scan läuft..."):
+
+                for ip_address in ip_list:
+
+                    if not ip_testung(ip_address):
+                        results_table.append({
+                            "IP-Adresse": ip_address,
+                            "Status": "Ungültige IP",
+                            "Final Score": "-",
+                            "Risk Level": "-",
+                            "Blacklist": "-",
+                            "Cache": "-"
+                        })
+                        continue
+
+                    result = run_complete_scan(ip_address)
+
+                    if not result["success"]:
+                        results_table.append({
+                            "IP-Adresse": ip_address,
+                            "Status": result["error"],
+                            "Final Score": "-",
+                            "Risk Level": "-",
+                            "Blacklist": "-",
+                            "Cache": "-"
+                        })
+                        continue
+
+                    threat = result["threat_data"]
+                    blacklist = result["blacklist_data"]
+
+                    final_score = calculate_final_score(
+                        abuse_score=threat["score"],
+                        is_blacklisted=blacklist["listed"],
+                        is_whitelisted=threat["whitelisted"]
+                    )
+
+                    risk = calculate_risk_level(final_score)
+
+                    results_table.append({
+                        "IP-Adresse": ip_address,
+                        "Status": "Erfolgreich",
+                        "Final Score": final_score,
+                        "Risk Level": f"{risk['icon']} {risk['level']}",
+                        "Abuse Score": f"{threat['score']}%",
+                        "Blacklist": "Ja" if blacklist["listed"] else "Nein",
+                        "Land": result["geo_data"]["country_code"],
+                        "ISP": result["geo_data"]["isp"],
+                        "Cache": "Ja" if result.get("cache_hit") else "Nein"
+                    })
+
+            st.success("Batch-Scan abgeschlossen!")
+
+            st.dataframe(
+                results_table,
+                use_container_width=True
+            )
