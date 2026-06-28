@@ -6,6 +6,7 @@ Es ruft die einzelnen API-Funktionen nacheinander auf, bündelt die Ergebnisse,
 nutzt den Cache und erstellt ein standardisiertes Datenpaket für die Anwendung.
 """
 
+# Importe der jeweiligen API-Methoden aus dem 'apis'-Unterordner mittels Punktnotation
 from apis.abuseipdb import get_abuseipdb_info
 from apis.ipapi import get_ipapi_info
 from apis.ipsum import get_ipsum_info
