@@ -52,7 +52,7 @@ def get_cached_result(ip_address):
 
 def set_cached_result(ip_address, result):
     """
-    Speichert ein Analyse-Ergebnis im Cache.
+    Speichert ein API-Analyse-Ergebnis im Cache.
 
     Args:
         ip_address (str): Die geprüfte IP-Adresse.

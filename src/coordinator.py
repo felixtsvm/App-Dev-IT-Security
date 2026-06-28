@@ -30,21 +30,33 @@ def run_complete_scan(ip_address):
     try:
 
         # ==========================
-        # Cache prüfen
+        # 1. Cache prüfen
         # ==========================
 
-        cached_result = get_cached_result(ip_address)
+        cached_result = get_cached_result(ip_address) # Prüft, ob die IP-Adresse bereits im Cache liegt und ein gültiges Ergebnis vorliegt. Wenn ja, wird das gespeicherte Ergebnis zurückgegeben
 
+        # Wenn ein gültiges Cache-Ergebnis vorliegt, wird es zurückgegeben und die API-Abfragen werden übersprungen. Zusätzlich wird das Feld "cache_hit" auf True gesetzt, um anzuzeigen, dass die Daten aus dem Cache stammen
         if cached_result is not None:
             cached_result["cache_hit"] = True
             return cached_result
 
         # ==========================
-        # AbuseIPDB
+        # 2. Externe APIs abfragen
+        # ==========================
+        # Liegt kein gültiges Cache-Ergebnis vor, werden die drei APIs nacheinander abgefragt.
+        # Sobald eine API einen Fehler liefert, springt Python in das jeweilige 'if'.
+        # Das dortige 'return' beendet die Funktion sofort und liefert nur die Fehlermeldung.
+        # Das Ergebnispaket ganz unten wird also nur dann gebaut und zurückgegeben, wenn alle
+        # drei Abfragen fehlerfrei durchgelaufen sind.
+        # --------------------------------------------------------------------------------------
+
+        # ==========================
+        # 2.1 AbuseIPDB
         # ==========================
 
         abuseipdb_data = get_abuseipdb_info(ip_address)
 
+        # Wenn in der Antwort der AbuseIPDB-API ein Fehler enthalten ist, wird sofort ein Fehlerpaket zurückgegeben und die Funktion beendet. Die anderen APIs werden nicht mehr abgefragt
         if "error" in abuseipdb_data:
             return {
                 "success": False,
@@ -52,11 +64,12 @@ def run_complete_scan(ip_address):
             }
 
         # ==========================
-        # IP-API
+        # 2.2 IP-API
         # ==========================
 
         ipapi_data = get_ipapi_info(ip_address)
 
+        # Wenn in der Antwort der IP-API ein Fehler enthalten ist, wird sofort ein Fehlerpaket zurückgegeben und die Funktion beendet. Die dritte API wird nicht mehr abgefragt
         if "error" in ipapi_data:
             return {
                 "success": False,
@@ -64,11 +77,12 @@ def run_complete_scan(ip_address):
             }
 
         # ==========================
-        # IPsum
+        # 2.3 IPsum
         # ==========================
 
         ipsum_data = get_ipsum_info(ip_address)
 
+        # Wenn in der Antwort der IPsum-API ein Fehler enthalten ist, wird sofort ein Fehlerpaket zurückgegeben und die Funktion beendet
         if "error" in ipsum_data:
             return {
                 "success": False,
@@ -84,19 +98,36 @@ def run_complete_scan(ip_address):
             "success": True,
             "cache_hit": False,
 
+            # ====================================
+            # 3. Reputations- und Bedrohungsdaten
+            # ====================================
+            # Hier werden die gewünschten Daten aus den drei APIs zusammengefasst und in einem einheitlichen Format zurückgegeben.
+            # ----------------------------------------------------------------------------------------------------------------------
+
+            # ==========================
+            # 3.1 AbuseIPDB
+            # ==========================
+
             "threat_data": {
 
-                # bereits vorhanden
-                "score": abuseipdb_data.get("abuseConfidenceScore", 0),
-                "whitelisted": abuseipdb_data.get("isWhitelisted", False),
+                "score": abuseipdb_data.get(
+                    "abuseConfidenceScore",
+                    "Unbekannt"
+                ),
 
-                # neu
-                "domain": abuseipdb_data.get("domain", "Unbekannt"),
+                "whitelisted": abuseipdb_data.get(
+                    "isWhitelisted", 
+                    False
+                ),
+                
+                "domain": abuseipdb_data.get(
+                    "domain", 
+                    "Unbekannt"
+                ),
 
-                "hostname":
-                    ", ".join(abuseipdb_data.get("hostnames", []))
-                    if abuseipdb_data.get("hostnames")
-                    else "Unbekannt",
+                "hostname": ", ".join(
+                    abuseipdb_data.get("hostnames", [])
+                    ) if abuseipdb_data.get("hostnames") else "Unbekannt",
 
                 "usage_type": abuseipdb_data.get(
                     "usageType",
@@ -105,7 +136,7 @@ def run_complete_scan(ip_address):
 
                 "reports": abuseipdb_data.get(
                     "totalReports",
-                    0
+                    "Unbekannt"
                 ),
 
                 "tor": abuseipdb_data.get(
@@ -114,6 +145,11 @@ def run_complete_scan(ip_address):
                 )
 
             },
+
+
+            # ==========================
+            # 3.2 IP-API
+            # ==========================
 
             "geo_data": {
 
@@ -144,6 +180,10 @@ def run_complete_scan(ip_address):
 
             },
 
+            # ==========================
+            # 3.3 IP-sum
+            # ==========================
+
             "blacklist_data": {
 
                 "listed": ipsum_data.get(
@@ -160,10 +200,11 @@ def run_complete_scan(ip_address):
 
         }
 
-        set_cached_result(ip_address, result)
+        set_cached_result(ip_address, result) # Speichert das fertige Ergebnis-Paket im Cache, damit bei einer erneuten Abfrage der gleichen IP-Adresse innerhalb von 10 Minuten die Daten direkt aus dem RAM abgerufen werden können
 
-        return result
+        return result # Gibt das fertige Ergebnis-Paket zurück, nachdem alle drei APIs erfolgreich abgefragt wurden und die Daten im Cache gespeichert wurden
 
+     # Wenn im try-Block ein Fehler auftritt, greift dieser except-Block und fängt die Ausnahme ab
     except Exception as e:
 
         return {
