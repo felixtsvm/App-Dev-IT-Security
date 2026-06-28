@@ -3,7 +3,7 @@ Zentraler API-Koordinator.
 
 Dieses Modul koordiniert die Abfragen an allen externen APIs.
 Es ruft die einzelnen API-Funktionen nacheinander auf, bündelt die Ergebnisse,
-nutzt den Cache und erstellt ein standardisiertes Datenpaket für die Anwendung.
+nutzt den Cache, falls verfügbar, und erstellt ein standardisiertes Datenpaket für die Anwendung.
 """
 
 # Importe der jeweiligen API-Methoden aus dem 'apis'-Unterordner mittels Punktnotation
@@ -11,18 +11,20 @@ from apis.abuseipdb import get_abuseipdb_info
 from apis.ipapi import get_ipapi_info
 from apis.ipsum import get_ipsum_info
 
+# Importe der Cache-Funktionen aus dem 'cache'-Modul
 from cache import get_cached_result, set_cached_result
 
 
 def run_complete_scan(ip_address):
     """
-    Führt eine vollständige Analyse einer IP-Adresse durch.
+    Diese Funktion steuert den gesamten Ablauf. Sie fragt alle drei APIs nacheinander ab (Schritt 1),
+    packt die Ergebnisse zusammen und gibt sie an die App weiter (Schritt 2).
 
     Args:
         ip_address (str): IPv4- oder IPv6-Adresse.
 
     Returns:
-        dict: Gesamtes Analysepaket.
+        dict: Ergebnis mit success-Status, Datenpaketen oder Fehlermeldung.
     """
 
     try:
