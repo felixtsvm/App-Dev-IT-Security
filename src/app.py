@@ -7,9 +7,9 @@ die Interaktion mit dem Validator, dem API-Koordinator und dem Scoring-Modul.
 
 Die Architektur der Benutzeroberfläche ist in zwei Hauptmodi unterteilt:
 
-1. Einzelprüfung: Konzipiert für manuelle, tiefgehende Analysen. Dieser Modus
+1. Einzelprüfung (Deep-Dive): Konzipiert für manuelle, tiefgehende Analysen. Dieser Modus
    richtet sich an private Anwender oder Security-Analysten und visualisiert detaillierte 
-   Threat-Intelligence-Metriken, geografische Daten und Blacklist-Einträge zur individuellen Auswertung
+   Threat-Intelligence-Metriken, geografische Daten und Blacklist-Einträge zur individuellen Auswertung.
 
 2. Batch-Scan (Massenverarbeitung): Speziell entwickelt für den betrieblichen Kontext.
    Hierbei liegt der Fokus auf der performanten, gleichzeitigen  Verarbeitung vieler IP-Adressen. 
