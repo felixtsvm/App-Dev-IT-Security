@@ -119,7 +119,7 @@ def calculate_risk_level(final_score):
             "icon": "🟡",
             "color": "orange",
             "action": "Manuelle Prüfung",
-            "explanation": "Auffällige Netzwerkparameter. IP sollte gemonitort oder manuell geprüft werden."
+            "explanation": "Auffällige Netzwerkparameter. IP sollte gemonitort oder manuell geprueft werden."
         }
 
     return {
@@ -127,5 +127,5 @@ def calculate_risk_level(final_score):
         "icon": "🟢",
         "color": "green",
         "action": "Zulassen",
-        "explanation": "Keine signifikanten Auffälligkeiten. Traffic kann passieren."
+        "explanation": "Keine signifikanten Auffaelligkeiten. Traffic kann passieren."
     }

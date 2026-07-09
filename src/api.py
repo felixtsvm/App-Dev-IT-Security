@@ -57,10 +57,15 @@ def check_ip():
         return jsonify(result), 500
 
     # Ergebnis zusammenstellen: Die IP-Adresse wird dem Ergebnis hinzugefügt, um die Rückgabe zu vervollständigen
-    result["ip_address"] = ip_address
-
+    minimal_result = {
+        "success": result["success"],
+        "ip_address": ip_address,
+        "final_score": result["final_score"],
+        "risk_level": result["risk_level"]
+    }
+    
     # Das fertige Dictionary wird als JSON-Antwort zurückgegeben und an den Client geschickt - Flask sendet automatisch den HTTP-Statuscode 200
-    return jsonify(result)
+    return jsonify(minimal_result)
 
 # Dieser Block stellt sicher, dass die Flask-Anwendung nur dann gestartet wird, wenn das Skript direkt ausgeführt wird
 if __name__ == "__main__":
