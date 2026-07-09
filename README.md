@@ -69,7 +69,7 @@ python src/api.py
 Sie können die API nun in einem zweiten Terminal-Fenster abfragen. Alternativ können Sie die URL auch einfach in Ihren Webbrowser eingeben. Übergeben Sie die IP einfach als URL-Parameter:
 
 ```bash
-curl "[http://127.0.0.1:5001/check?ip=8.8.8.8]"
+(curl "http://127.0.0.1:5001/check?ip=8.8.8.8" -UseBasicParsing).Content
 ```
 
 #### Ergebnis-Struktur
