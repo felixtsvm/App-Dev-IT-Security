@@ -55,13 +55,24 @@ def check_ip():
     # Fehlerbehandlung: Wenn eine externe API oder der Koordinator selbst einen Fehler zurückliefert, wird Fehler 500 zurückgegeben
     if not result["success"]:
         return jsonify(result), 500
+    
+    # Handlungsempfehlung: Basierend auf dem Final Risk Score wird eine Empfehlung für die weitere Vorgehensweise gegeben
+    if result["final_score"] >= 70:
+        handlung = "Blockieren"
+
+    elif result["final_score"] >= 30:
+        handlung = "Manuelle Prüfung"
+
+    else:
+        handlung = "Zulassen"
 
     # Ergebnis zusammenstellen: Die IP-Adresse wird dem Ergebnis hinzugefügt, um die Rückgabe zu vervollständigen
     minimal_result = {
         "success": result["success"],
         "ip_address": ip_address,
         "final_score": result["final_score"],
-        "risk_level": result["risk_level"]
+        "risk_level": result["risk_level"],
+        "handlungsempfehlung": handlung
     }
     
     # Das fertige Dictionary wird als JSON-Antwort zurückgegeben und an den Client geschickt - Flask sendet automatisch den HTTP-Statuscode 200
@@ -70,4 +81,3 @@ def check_ip():
 # Dieser Block stellt sicher, dass die Flask-Anwendung nur dann gestartet wird, wenn das Skript direkt ausgeführt wird
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
-
