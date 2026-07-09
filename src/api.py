@@ -57,11 +57,12 @@ def check_ip():
 
     threat = result["threat_data"]
     blacklist = result["blacklist_data"]
+    geo = result["geo_data"]
 
     final_score = calculate_final_score(
-        abuse_score=threat["score"],
-        is_blacklisted=blacklist["listed"],
-        is_whitelisted=threat["whitelisted"]
+        threat_data=threat,
+        blacklist_data=blacklist,
+        geo_data=geo
     )
 
     risk = calculate_risk_level(final_score)
