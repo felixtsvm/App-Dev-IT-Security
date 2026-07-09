@@ -78,7 +78,7 @@ Nutze diesen Befehl, um die Antwort direkt als formatiertes JSON in deinem Termi
 Gib die folgende URL einfach in die Adresszeile deines Browsers ein:
 
 ```bash
-[http://127.0.0.1:5001/check?ip=8.8.8.8]
+http://127.0.0.1:5001/check?ip=8.8.8.8
 ```
 
 #### Ergebnis-Struktur
