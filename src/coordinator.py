@@ -14,6 +14,9 @@ from apis.ipsum import get_ipsum_info
 # Importe der Cache-Funktionen aus dem 'cache'-Modul
 from cache import get_cached_result, set_cached_result
 
+# Scoring-Module importieren
+from scoring import calculate_final_score, calculate_risk_level
+
 
 def run_complete_scan(ip_address):
     """
@@ -199,6 +202,19 @@ def run_complete_scan(ip_address):
             }
 
         }
+
+        # Score direkt im Backend berechnen
+        final_score = calculate_final_score(
+            threat_data=result["threat_data"], 
+            blacklist_data=result["blacklist_data"], 
+            geo_data=result["geo_data"]
+        )
+        risk = calculate_risk_level(final_score)
+
+        # Ergebnisse direkt als neue Felder ins fertige Paket packen
+        result["final_score"] = final_score
+        result["risk_level"] = risk["level"]
+        result["risk_explanation"] = risk["explanation"]
 
         set_cached_result(ip_address, result) # Speichert das fertige Ergebnis-Paket im Cache, damit bei einer erneuten Abfrage der gleichen IP-Adresse innerhalb von 10 Minuten die Daten direkt aus dem RAM abgerufen werden können
 

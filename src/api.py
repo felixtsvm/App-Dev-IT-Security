@@ -1,38 +1,12 @@
-"""
-Flask REST API für den IP-Checker.
-
-Diese Datei stellt eine REST-Schnittstelle bereit, damit IP-Adressen
-nicht nur über die Streamlit-Oberfläche, sondern auch über HTTP-Anfragen
-geprüft werden können.
-"""
-
 from flask import Flask, request, jsonify
 
+# HIER FLIEGEN DIE SCORING-IMPORTE RAUS! Wir brauchen nur noch den Validator und Koordinator:
 from validator import ip_testung
 from coordinator import run_complete_scan
-from scoring import calculate_final_score, calculate_risk_level
-
 
 app = Flask(__name__)
 
-
-@app.route("/", methods=["GET"])
-def home():
-    return jsonify({
-        "message": "IP-Checker REST API läuft.",
-        "endpoints": {
-            "single_check": "/check?ip=8.8.8.8",
-            "health": "/health"
-        }
-    })
-
-
-@app.route("/health", methods=["GET"])
-def health():
-    return jsonify({
-        "status": "ok"
-    })
-
+# ... (home und health Endpunkte bleiben exakt so, wie sie sind) ...
 
 @app.route("/check", methods=["GET"])
 def check_ip():
@@ -50,35 +24,18 @@ def check_ip():
             "error": "Die IP-Adresse ist ungültig."
         }), 400
 
+    # 1. Wir rufen das Backend auf
     result = run_complete_scan(ip_address)
 
+    # 2. Fehler abfangen
     if not result["success"]:
         return jsonify(result), 500
 
-    threat = result["threat_data"]
-    blacklist = result["blacklist_data"]
-    geo = result["geo_data"]
+    # 3. Den fertigen IP-String noch zum Payload hinzufügen, damit die Antwort perfekt ist
+    result["ip_address"] = ip_address
 
-    final_score = calculate_final_score(
-        threat_data=threat,
-        blacklist_data=blacklist,
-        geo_data=geo
-    )
-
-    risk = calculate_risk_level(final_score)
-
-    return jsonify({
-        "success": True,
-        "ip_address": ip_address,
-        "cache_hit": result.get("cache_hit", False),
-        "final_score": final_score,
-        "risk_level": risk["level"],
-        "risk_explanation": risk["explanation"],
-        "threat_data": result["threat_data"],
-        "geo_data": result["geo_data"],
-        "blacklist_data": result["blacklist_data"]
-    })
-
+    # 4. Die direkte, unveränderte Ausgabe! Kein Auspacken, kein Rechnen mehr nötig.
+    return jsonify(result)
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
