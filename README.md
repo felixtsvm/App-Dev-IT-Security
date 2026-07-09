@@ -1,62 +1,104 @@
 # App Development - Projekt 4: IT Security
 
-🌐 Live-Demo:  
-https://ip-reputation-checken.streamlit.app/
+🌐 **Live-Demo:** [ip-reputation-checken.streamlit.app](https://ip-reputation-checken.streamlit.app/)
 
 ---
 
-## Team
+## 👥 Team
 
-- **Felix**
-- **Fikri**
-- **Cemre**
-
----
-
-## Kurzbeschreibung
-
-Dieses Projekt ist im Rahmen des Moduls **App-Development** entstanden.  
-Es bietet ein interaktives Dashboard zur Analyse von IP-Adressen, um potenzielle Bot-Aktivitäten und Sicherheitsrisiken frühzeitig zu erkennen.
-
-Mit Hilfe verschiedener Sicherheits- und Reputationsprüfungen können verdächtige IP-Adressen analysiert und bewertet werden.
+- **Felix Kant**
+- **Fikri Kaba**
+- **Cemre Yazgan**
 
 ---
 
-## Lokale Installation & Start
+## 📝 Kurzbeschreibung
 
-Falls Sie das Projekt lokal ausführen möchten, verwenden wir ein **Virtual Environment (venv)**, um Versionskonflikte auf Ihrem System zu vermeiden.
+Dieses Projekt ist im Rahmen des Moduls **App-Development** entstanden. Es bietet ein professionelles, zweigeteiltes System zur Analyse von IP-Adressen, um potenzielle Bot-Aktivitäten und Sicherheitsrisiken frühzeitig zu erkennen.
 
-Folgen Sie dazu einfach diesen Schritten:
+Das System besteht aus einer **REST-API (Backend)** für schnelle, maschinelle Abfragen und einem interaktiven **Streamlit-Dashboard (Frontend)** für die visuelle Detail-Analyse. 
+
+Durch die Bündelung verschiedener API-Quellen (AbuseIPDB, IP-API, IPsum) und eine intelligente Caching-Logik liefert unsere Anwendung sofortige Risiko-Scores und klare Handlungsempfehlungen (Blockieren, Überprüfen, Zulassen).
 
 ---
 
-### 1. Repository klonen & Projektordner öffnen
+## ⚙️ Nutzung 1: Die REST-API (Für automatisierte Systeme)
 
-*`git clone https://github.com/felixtsvm/App-Dev-IT-Security.git
-cd App-Dev-IT-Security`*
+Neben der grafischen Oberfläche bietet unser System eine schlanke, zustandslose REST-API. Diese API ist speziell für externe Systeme (z. B. Firewalls, Router oder Batch-Skripte) konzipiert, die in Millisekunden eine maschinenlesbare Handlungsempfehlung benötigen, ohne unnötigen Datenballast zu laden.
 
-### 2. Virtuelle Umgebung (venv) aktivieren & Abhängigkeiten installieren
+### 1. Lokale Installation & API-Server starten
 
-#### **Windows:**
-1. Sperre für lokale Skripte temporär aufheben
-*`Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process`*
+Klonen Sie zuerst das Repository und wechseln Sie in das Projektverzeichnis:
 
-2. Virtuelle Umgebung aktivieren
-*`.\venv\Scripts\activate`*
+```bash
+git clone [https://github.com/felixtsvm/App-Dev-IT-Security.git](https://github.com/felixtsvm/App-Dev-IT-Security.git)
+cd App-Dev-IT-Security
+```
 
-3. Benötigte Pakete installieren
-*`pip install -r requirements.txt`*
+Richten Sie nun die virtuelle Umgebung passend zu Ihrem Betriebssystem ein:
 
-##### **Mac / Linux:**
-1. Virtuelle Umgebung aktivieren
-*`source venv/bin/activate__`*
+#### 🪟 Windows Setup
+```powershell
+# 1. Sperre für lokale Skripte temporär aufheben
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 
-2. Benötigte Pakete installieren
-*`pip install -r requirements.txt`*
+# 2. Virtuelle Umgebung aktivieren
+.\venv\Scripts\activate
 
-### 3. Dashboard starten
-*`streamlit run src/app.py`*
+# 3. Benötigte Pakete installieren
+pip install -r requirements.txt
+```
+
+#### 🍎 Mac / Linux Setup
+```bash
+# 1. Virtuelle Umgebung aktivieren
+source venv/bin/activate
+
+# 2. Benötigte Pakete installieren
+pip install -r requirements.txt
+```
+
+Sobald die Pakete installiert sind, starten Sie den Server:
+
+```bash
+python src/api.py
+```
+
+### 2. Abfrage senden & Ergebnisse
+
+Sie können die API nun von jedem beliebigen System oder in einem zweiten Terminal-Fenster abfragen. Alternativ können Sie die URL auch einfach in Ihren Webbrowser eingeben. Übergeben Sie die IP einfach als URL-Parameter:
+
+```bash
+curl "[http://127.0.0.1:5001/check?ip=8.8.8.8]"
+```
+
+#### Ergebnis-Struktur
+Die API liefert ein strukturiertes JSON-Objekt zurück, das Ihnen sofortige Handlungssicherheit gibt:
+
+```json
+{
+  "final_score": 0,
+  "handlungsempfehlung": "Zulassen",
+  "ip_address": "8.8.8.8",
+  "risk_level": "Niedriges Risiko",
+  "success": true
+}
+```
+
+Um die Berechnung des Scores exakt nachvollziehen zu können, kannst die detaillierte Gewichtung der einzelnen Quellen jederzeit im Quellcode unter src/scoring.py einsehen. Dort ist definiert, ab welchem Schwellenwert eine IP als "hohes Risiko" eingestuft wird.
 
 
-# Cemre sagt
-BÄMM
+## 📊 Nutzung 2: Das Streamlit-Dashboard (Frontend)
+
+Das Dashboard bietet eine intuitive grafische Oberfläche für die visuelle Detail-Analyse.
+
+### a) Web-Version
+Du kannst das Tool direkt ohne Installation nutzen:
+🌐 **[Zum Dashboard](https://ip-reputation-checken.streamlit.app/)**
+
+### b) Lokales Dashboard starten
+Falls du das Dashboard lokal ausführen möchtest (Voraussetzung: Windows- / Mac- / Linux-Setup vollzogen):
+```bash
+streamlit streamlit run src/app.py
+```
+*Das Dashboard öffnet sich anschließend automatisch unter `http://localhost:8501`.*
