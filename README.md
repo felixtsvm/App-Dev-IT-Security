@@ -66,7 +66,7 @@ python src/api.py
 
 ### 2. Abfrage senden & Ergebnisse
 
-Sie können die API nun von jedem beliebigen System oder in einem zweiten Terminal-Fenster abfragen. Alternativ können Sie die URL auch einfach in Ihren Webbrowser eingeben. Übergeben Sie die IP einfach als URL-Parameter:
+Sie können die API nun in einem zweiten Terminal-Fenster abfragen. Alternativ können Sie die URL auch einfach in Ihren Webbrowser eingeben. Übergeben Sie die IP einfach als URL-Parameter:
 
 ```bash
 curl "[http://127.0.0.1:5001/check?ip=8.8.8.8]"
