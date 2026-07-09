@@ -65,3 +65,4 @@ def check_ip():
 # Dieser Block stellt sicher, dass die Flask-Anwendung nur dann gestartet wird, wenn das Skript direkt ausgeführt wird
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
+
