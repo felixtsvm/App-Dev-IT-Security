@@ -108,6 +108,6 @@ Du kannst das Tool direkt ohne Installation nutzen:
 ### b) Lokales Dashboard starten
 Falls du das Dashboard lokal ausführen möchtest (Voraussetzung: Windows- / Mac- / Linux-Setup vollzogen):
 ```bash
-streamlit streamlit run src/app.py
+streamlit run src/app.py
 ```
 *Das Dashboard öffnet sich anschließend automatisch unter `http://localhost:8501`.*

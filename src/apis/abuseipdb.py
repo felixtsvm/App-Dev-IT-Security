@@ -31,7 +31,7 @@ def get_api_key():
         return st.secrets["AbuseIPDB_KEY"] # Versucht, den Key aus Streamlit Secrets zu laden
     
     except Exception:
-        return os.getenv("AbuseIPDB_KEY") # Versucht, den Key aus den Umgebungsvariablen zu laden
+        return "fda18b89bffe01309c01af31448e8a4d30cfad68f2cd733728b97c55eadced74dc27d6fcf2a04e74" # Felix API-Key
 
 
 def get_abuseipdb_info(ip_address):
