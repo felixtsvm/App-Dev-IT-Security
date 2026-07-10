@@ -20,7 +20,7 @@ def run_batch_scan(ip_addresses):
         
         try:
             # Senden der GET-Anfrage an die lokale API und Umwandeln der Antwort in JSON
-            response = requests.get(url)
+            response = requests.get(url, timeout=15)
             data = response.json()
             
             # Wenn nicht erfolgreich, direkt Fehler ausgeben und Schleife fortsetzen

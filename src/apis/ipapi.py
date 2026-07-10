@@ -26,7 +26,7 @@ def get_ipapi_info(ip_address):
     # Wenn die Anfrage fehlschlägt (z. B. Netzwerkfehler, ungültige URL), wird eine Ausnahme ausgelöst, die unten (Exception) abgefangen wird
     try:
         # Hier wird die URL an die requests.get()-Funktion übergeben, um die 'response' zu erzeugen
-        response = requests.get(url)
+        response = requests.get(url, timeout=10)
 
         # status_code 200 bedeutet, dass die Anfrage erfolgreich war (Internet-Standard) und die API eine gültige Antwort zurückgegeben hat
         if response.status_code == 200:
