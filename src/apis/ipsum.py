@@ -15,34 +15,49 @@ def get_ipsum_info(ip_address):
 
     Args:
         ip_address (str): Die zu überprüfende IPv4- oder IPv6-Adresse.
-    
+
     Returns:
         dict: Ein Dictionary mit dem Status der Liste oder einer Fehlermeldung unter 'error'.
     """
 
     # Statt der oben genannten URL wird die RAW-URL der GitHub-Datei verwendet, damit wir den reinen Textinhalt erhalten
-    url = 'https://raw.githubusercontent.com/stamparm/ipsum/master/levels/3.txt'
+    url = "https://raw.githubusercontent.com/stamparm/ipsum/master/levels/3.txt"
 
     try:
-        # Feed wird heruntergeladen (wenn nach 5 Sekunden GitHub nicht antwortet, wird die Anfrage abgebrochen, damit die App nicht einfriert)
+        # Feed wird heruntergeladen (wenn nach 5 Sekunden GitHub nicht antwortet,
+        # wird die Anfrage abgebrochen, damit die App nicht einfriert)
         response = requests.get(url, timeout=5)
         response.raise_for_status()  # Wenn GitHub einen Fehler meldet, wird sofort unten in den except-Block gesprungen
 
-        # Es wird geprüft, ob die IP-Adresse irgendwo im Text des Feeds vorkommt
-        if ip_address in response.text:
-            # Wenn die IP-Adresse im Text gefunden wird, stoppt die Funktion sofort und schickt ein Paket samt Warntext zurück
-            return {
-                'listed': True,
-                'status_text': 'Kritisch (Auf mindestens 3 globalen Blacklists)'
-            }
-        
-        # Trifft die if-Bedingung oben nicht zu (IP nicht auf der Liste), wird dieses Paket zurückgegeben
-        return {
-            'listed': False,
-            'status_text': 'Sauber oder unauffällig'
+        # Der Feed besteht aus Kommentaren (#) und IP-Adressen.
+        # Kommentare und leere Zeilen werden entfernt.
+        listed_ips = {
+            line.strip()
+            for line in response.text.splitlines()
+            if line.strip() and not line.startswith("#")
         }
-    
-    # Wenn im try-Block ein Fehler auftritt, greift dieser except-Block und fängt die Ausnahme ab
+
+        # Es wird geprüft, ob die IP-Adresse exakt im Feed enthalten ist
+        if ip_address in listed_ips:
+            # Wenn die IP-Adresse gefunden wird, stoppt die Funktion sofort
+            # und schickt ein Paket samt Warntext zurück
+            return {
+                "listed": True,
+                "status_text": "Kritisch (Auf mindestens 3 globalen Blacklists)"
+            }
+
+        # Trifft die if-Bedingung oben nicht zu (IP nicht auf der Liste),
+        # wird dieses Paket zurückgegeben
+        return {
+            "listed": False,
+            "status_text": "Sauber oder unauffällig"
+        }
+
+    # Wenn im try-Block ein Fehler auftritt,
+    # greift dieser except-Block und fängt die Ausnahme ab
     except Exception as e:
-        # Das e wird automatisch mit der Fehlermeldung gefüllt (z. B. 'Netzwerkfehler', 'Ungültige URL')
-        return {'error': f'Anfragefehler IPsum: {str(e)}'}
+        # Das e wird automatisch mit der Fehlermeldung gefüllt
+        # (z. B. Netzwerkfehler oder ungültige URL)
+        return {
+            "error": f"Anfragefehler IPsum: {str(e)}"
+        }
