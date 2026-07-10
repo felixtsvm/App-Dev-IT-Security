@@ -5,7 +5,7 @@ import streamlit as st
 
 from coordinator import run_complete_scan
 from validator import ip_testung
-from scoring import calculate_final_score, calculate_risk_level
+from scoring import calculate_risk_level
 
 
 st.set_page_config(page_title="IP-Checker", page_icon="🛡️")
@@ -23,7 +23,12 @@ if scan_mode == "Einzelprüfung":
     )
 
     if st.button("Prüfen"):
-        if ip_testung(ip_input):
+        ip_input = ip_input.strip()
+
+        if not ip_input:
+            st.warning("Bitte eine IP-Adresse eingeben.")
+
+        elif ip_testung(ip_input):
             with st.spinner(f"Prüfe {ip_input}..."):
                 start_time = time.perf_counter()
                 result = run_complete_scan(ip_input)
@@ -31,14 +36,14 @@ if scan_mode == "Einzelprüfung":
 
                 response_time_ms = (end_time - start_time) * 1000
 
-                if not result["success"]:
-                    st.error(result["error"])
+                if not result.get("success", False):
+                    st.error(result.get("error", "Die Prüfung ist fehlgeschlagen."))
                 else:
                     threat = result["threat_data"]
                     geo = result["geo_data"]
                     blacklist = result["blacklist_data"]
 
-                    final_score = calculate_final_score(threat, blacklist, geo)
+                    final_score = result["final_score"]
                     risk = calculate_risk_level(final_score)
 
                     st.success(f"Analyse für {ip_input} abgeschlossen!")
@@ -155,12 +160,11 @@ if scan_mode == "Batch-Scan":
                     end_time = time.perf_counter()
 
                     response_time_ms = (end_time - start_time) * 1000
-                    response_times.append(response_time_ms)
 
-                    if not result["success"]:
+                    if not result.get("success", False):
                         results_table.append({
                             "IP-Adresse": ip_address,
-                            "Status": result["error"],
+                            "Status": result.get("error", "Scan fehlgeschlagen"),
                             "Antwortzeit (ms)": round(response_time_ms, 2),
                             "Final Risk Score": "-",
                             "Risk Level": "-",
@@ -182,11 +186,13 @@ if scan_mode == "Batch-Scan":
                         })
                         continue
 
+                    response_times.append(response_time_ms)
+
                     threat = result["threat_data"]
                     geo = result["geo_data"]
                     blacklist = result["blacklist_data"]
 
-                    final_score = calculate_final_score(threat, blacklist, geo)
+                    final_score = result["final_score"]
                     risk = calculate_risk_level(final_score)
 
                     results_table.append({
