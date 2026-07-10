@@ -146,3 +146,5 @@ Falls Sie das Dashboard lokal ausführen möchten (Voraussetzung: Lokale Install
 streamlit run src/app.py
 ```
 *Das Dashboard öffnet sich anschließend automatisch unter `http://localhost:8501`.*
+
+für Pytest: python3 -m pytest tests
