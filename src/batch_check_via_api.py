@@ -1,4 +1,4 @@
-import requests
+import requests # Importiert die requests-Bibliothek, um HTTP-Anfragen an die lokale REST-API zu senden
 
 def run_batch_scan(ip_addresses):
     """
@@ -28,12 +28,19 @@ def run_batch_scan(ip_addresses):
                 print(f"IP: {ip} | Fehler: {data.get('error', 'Unbekannt')}")
                 continue
                 
-            # Erfolgsfall: Extraktion der relevanten Sicherheitsdaten und Ausgabe in der Konsole
-            print(f"IP: {ip} | Score: {data.get('final_score')} | Empfehlung: {data.get('handlungsempfehlung', 'Keine Info')}")
+            # Erfolgsfall
+            score = data.get('final_score')
+            empfehlung = data.get('handlungsempfehlung', 'Keine Info')
+            
+            # ip:<15 füllt die IP mit Leerzeichen auf 15 Zeichen auf (maximale Länge IPv4)
+            # score:>3 richtet den Score rechtsbündig auf 3 Zeichen aus (für Scores von 0 bis 100)
+            print(f"IP: {ip:<15} | Score: {score:>3} | Empfehlung: {empfehlung}")
                 
         except requests.exceptions.ConnectionError:
+
             # Spezifischer Fehler, falls der API-Server nicht gestartet wurde
             print(f"IP: {ip} | Fehler: API-Server nicht erreichbar.")
+            
         except Exception as e:
             # Abfangen sonstiger Laufzeitfehler (z.B. Timeout oder Verbindungsabbruch)
             print(f"IP: {ip} | Unerwarteter Fehler: {e}")
