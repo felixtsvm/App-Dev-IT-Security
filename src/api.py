@@ -13,6 +13,7 @@ from flask import Flask, request, jsonify # Flask zur Erstellung des API-Servers
 from validator import ip_testung # Eigenes Validierungsmodul, um die IP-Adresse auf formale Gültigkeit zu prüfen
 from coordinator import run_complete_scan # Orchestriert den gesamten Scan-Prozess und bündelt die API-Ergebnisse
 
+
 app = Flask(__name__) # Initialisierung der Flask-Anwendung
 
 #Definiert den URL-Pfad ("/check") und erlaubt nur GET-Anfragen
@@ -35,7 +36,7 @@ def check_ip():
     # Parameter aus der Anfrage extrahieren: Zieht den Wert nach dem "?ip=" aus der URL
     ip_address = request.args.get("ip")
 
-    # Erste Validierungsstufe: Prüfen, ob üerhaupt eine IP übergeben wurde - wenn keine übergeben wurde, wird Fehler 400 zurückgegeben
+    # Erste Validierungsstufe: Prüfen, ob überhaupt eine IP übergeben wurde - wenn keine übergeben wurde, wird Fehler 400 zurückgegeben
     if not ip_address:
         return jsonify({
             "success": False,
@@ -49,7 +50,7 @@ def check_ip():
             "error": "Die IP-Adresse ist ungültig."
         }), 400
 
-    # Verarbeitung: Der Koordinator wird aufgerufen, um den Scan durchzuführen und liefert ein fertiges Ergebnis zurück
+    # Vollständigen Scan über den Koordinator ausführen.
     result = run_complete_scan(ip_address)
 
     # Fehlerbehandlung: Wenn eine externe API oder der Koordinator selbst einen Fehler zurückliefert, wird Fehler 500 zurückgegeben
